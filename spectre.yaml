@@ -3,6 +3,9 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: spectre
+  annotations:
+    flux.weave.works/automated: "true"
+    flux.weave.works/tag.spectre: glob:v*
 spec:
   replicas: 1
   strategy:
@@ -11,9 +14,6 @@ spec:
     metadata:
       labels:
         io.kompose.service: app
-      annotations:
-        flux.weave.works/automated: "true"
-        flux.weave.works/tag.spectre: glob:v*
     spec:
       containers:
       - args:
