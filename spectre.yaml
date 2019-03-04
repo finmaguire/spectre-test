@@ -1,0 +1,113 @@
+# App
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: spectre
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: app
+      annotations:
+        flux.weave.works/automated: "true"
+        flux.weave.works/tag.spectre: glob:v*
+    spec:
+      containers:
+      - args:
+        - bash
+        - -c
+        - rm -f /app/tmp/pids/*.pid && rake assets:precompile && SECRET_KEY_BASE=`rake secret` rails server -b 0.0.0.0
+        env:
+        - name: DATABASE_URL
+          value: postgresql://postgres@db/spectre
+        - name: DOMAIN_NAME
+          value: app
+        - name: PORT
+          value: :3000
+        - name: PROTOCOL
+          value: http://
+        - name: RAILS_ENV
+          value: production
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: secret.spectre.token
+              key: SECRET_KEY_BASE
+        - name: SECRET_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: secret.spectre.token
+              key: SECRET_TOKEN
+        - name: RAILS_SERVE_STATIC_FILES
+          value: "true"
+        image: sk-docker-registry-v2.staging.posrip.com/devops-toolbox/spectre:v0.1.0
+        name: spectre
+        ports:
+        - containerPort: 3000
+        resources: {}
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spectre
+spec:
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+  selector:
+    io.kompose.service: app
+---
+# Database
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose --file docker-compose.yml convert
+    kompose.version: 1.17.0 ()
+  labels:
+    io.kompose.service: db
+  name: db
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: db
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: spectre
+          image: postgres:9.4
+          name: spectre-db
+          ports:
+            - containerPort: 5432
+          resources: {}
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose --file docker-compose.yml convert
+    kompose.version: 1.17.0 ()
+  labels:
+    io.kompose.service: db
+  name: spectre-db
+spec:
+  ports:
+    - name: "5432"
+      port: 5432
+      targetPort: 5432
+  selector:
+    io.kompose.service: db
+
