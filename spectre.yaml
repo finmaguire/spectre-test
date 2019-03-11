@@ -1,3 +1,4 @@
+---
 # App
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -19,7 +20,8 @@ spec:
       - args:
         - bash
         - -c
-        - rm -f /app/tmp/pids/*.pid && rake assets:precompile && SECRET_KEY_BASE=`rake secret` rails server -b 0.0.0.0
+        - rm -f /app/tmp/pids/*.pid && rake assets:precompile && SECRET_KEY_BASE=`rake
+          secret` rails server -b 0.0.0.0
         env:
         - name: DATABASE_URL
           value: postgresql://postgres@db/spectre
@@ -43,13 +45,12 @@ spec:
               key: SECRET_TOKEN
         - name: RAILS_SERVE_STATIC_FILES
           value: "true"
-        image: sk-docker-registry-v2.staging.posrip.com/devops-toolbox/spectre:v0.1.0
+        image: sk-docker-registry-v2.staging.posrip.com/devops-toolbox/spectre:v0.1.7
         name: spectre
         ports:
         - containerPort: 3000
         resources: {}
       restartPolicy: Always
-
 ---
 apiVersion: v1
 kind: Service
@@ -57,9 +58,9 @@ metadata:
   name: spectre
 spec:
   ports:
-    - name: "3000"
-      port: 3000
-      targetPort: 3000
+  - name: "3000"
+    port: 3000
+    targetPort: 3000
   selector:
     io.kompose.service: app
 ---
@@ -83,16 +84,15 @@ spec:
         io.kompose.service: db
     spec:
       containers:
-        - env:
-            - name: POSTGRES_DB
-              value: spectre
-          image: postgres:9.4
-          name: spectre-db
-          ports:
-            - containerPort: 5432
-          resources: {}
+      - env:
+        - name: POSTGRES_DB
+          value: spectre
+        image: postgres:9.4
+        name: spectre-db
+        ports:
+        - containerPort: 5432
+        resources: {}
       restartPolicy: Always
-
 ---
 apiVersion: v1
 kind: Service
@@ -105,9 +105,9 @@ metadata:
   name: spectre-db
 spec:
   ports:
-    - name: "5432"
-      port: 5432
-      targetPort: 5432
+  - name: "5432"
+    port: 5432
+    targetPort: 5432
   selector:
     io.kompose.service: db
 
